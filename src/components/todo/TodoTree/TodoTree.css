@@ -1,3 +1,23 @@
+/* overrides for selectable tree feat */
+.ant-tree .ant-tree-node-content-wrapper.ant-tree-node-selected,
+.ant-tree .ant-tree-node-content-wrapper:hover {
+  background-color: transparent;
+}
+
 .todotree {
   background: unset;
+}
+
+.todotree-editable-text  {
+  margin-right: 8px;
+  font-size: 1.25em;
+}
+
+.todotree-editable-text .ant-typography-edit {
+  margin-left: 8px;
+  color: black;
+}
+
+.todotree-editable-text.ant-typography-edit-content {
+  width: 400px;
 }

@@ -1,6 +1,7 @@
 import React, { useState, Key, ReactNode } from 'react';
 
-import { Tree, Typography } from 'antd';
+import { Tooltip, Tree, Typography, Row, Col } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import { DataNode } from 'antd/lib/tree';
 
 import './TodoTree.css';
@@ -9,16 +10,20 @@ const { Paragraph } = Typography;
 
 type TodoTreeProps = {
   data: DataNode[] | undefined,
+  handleEditTask: Function,
+  handleAddSubtask: Function,
 };
 
-const TodoTree = ({ data }: TodoTreeProps) => {
+const TodoTree = ({
+  data,
+  handleAddSubtask,
+  handleEditTask,
+}: TodoTreeProps) => {
   const [expandedKeys, setExpandedKeys] = useState<Key[]>(['0-0-0', '0-0-1']);
-  const [checkedKeys, setCheckedKeys] = useState<Key[]>(['0-0-0']);
-  const [selectedKeys, setSelectedKeys] = useState<Key[]>([]);
+  // const [checkedKeys, setCheckedKeys] = useState<Key[]>(['0-0-0']);
   const [autoExpandParent, setAutoExpandParent] = useState<boolean>(true);
 
   const onExpand = (expandedKeysValue: Key[]) => {
-    console.log('onExpand', expandedKeysValue);
     // if not set autoExpandParent to false, if children expanded, parent can not collapse.
     // or, you can remove all expanded children keys.
     setExpandedKeys(expandedKeysValue);
@@ -29,27 +34,41 @@ const TodoTree = ({ data }: TodoTreeProps) => {
   // is not assignable to type
   // '(checked: Key[] | { checked: Key[]; halfChecked: Key[]; }, info: CheckInfo) => void'.
 
-  const onCheck = (checkedKeysValue: any) => {
-    console.log('onCheck', checkedKeysValue);
-    setCheckedKeys(checkedKeysValue);
-  };
-
-  const onSelect = (selectedKeysValue: Key[], info: any) => {
-    console.log('onSelect', info);
-    setSelectedKeys(selectedKeysValue);
-  };
+  // const onCheck = (checkedKeysValue: any) => {
+  //   console.log('onCheck', checkedKeysValue);
+  //   setCheckedKeys(checkedKeysValue);
+  // };
 
   const renderTitle = (node: DataNode): ReactNode => {
-    const { title } = node;
+    const { key, title } = node;
 
-    const handleTitleEdit = () => {
-      console.log('edit this shit');
+    const handleTitleEdit = (value: String) => {
+      handleEditTask(key, value);
+    };
+
+    const handleAddClick = () => {
+      handleAddSubtask(key);
     };
 
     return (
-      <Paragraph editable={{ onChange: handleTitleEdit }}>
-        {title}
-      </Paragraph>
+      <Row>
+        <Col>
+          <Paragraph
+            className="todotree-editable-text"
+            editable={{
+              autoSize: { maxRows: 3, minRows: 1 },
+              onChange: handleTitleEdit,
+            }}
+            >
+            {title}
+          </Paragraph>
+        </Col>
+        <Col>
+          <Tooltip title="Add subtask">
+            <PlusOutlined onClick={handleAddClick} />
+          </Tooltip>
+        </Col>
+      </Row>
     );
   };
 
@@ -57,15 +76,12 @@ const TodoTree = ({ data }: TodoTreeProps) => {
     <Tree
       autoExpandParent={autoExpandParent}
       checkable
-      checkedKeys={checkedKeys}
-      expandedKeys={expandedKeys}
-      onCheck={onCheck}
-      onExpand={onExpand}
-      onSelect={onSelect}
-      selectedKeys={selectedKeys}
-      treeData={data}
-      titleRender={renderTitle}
       className="todotree"
+      expandedKeys={expandedKeys}
+      // onCheck={onCheck}
+      onExpand={onExpand}
+      titleRender={renderTitle}
+      treeData={data}
     />
   );
 };
