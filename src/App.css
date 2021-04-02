@@ -1,0 +1,13 @@
+@import '~antd/dist/antd.css';
+
+.app-header,
+.app-content {
+  margin: 0 auto;
+  padding: 0;
+  width: 1000px;
+}
+
+.app-header {
+  margin-top: 12vh;
+  background: unset;
+}
