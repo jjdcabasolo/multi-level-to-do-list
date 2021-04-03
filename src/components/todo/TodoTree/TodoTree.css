@@ -9,8 +9,8 @@
 }
 
 .todotree-editable-text  {
-  margin-right: 8px;
   font-size: 1.25em;
+  margin-right: 8px;
 }
 
 .todotree-editable-text .ant-typography-edit {
@@ -20,4 +20,14 @@
 
 .todotree-editable-text.ant-typography-edit-content {
   width: 400px;
+}
+
+.todotree-container {
+  min-height: 30vh;
+}
+
+.todotree-container-center-content {
+  align-items: center;
+  display: flex;
+  justify-content: center;
 }

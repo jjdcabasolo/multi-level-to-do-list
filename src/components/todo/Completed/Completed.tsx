@@ -5,36 +5,24 @@ import React, {
   useState,
 } from 'react';
 
-import {
-  Col,
-  Empty,
-  Row,
-  Tooltip,
-  Tree,
-  Typography,
-} from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Empty, Tree, Typography } from 'antd';
 import { DataNode } from 'antd/lib/tree';
 
-import './TodoTree.css';
+import './Completed.css';
 
-const { Paragraph } = Typography;
+const { Text } = Typography;
 
-type TodoTreeProps = {
+type CompletedProps = {
   data: DataNode[] | undefined,
-  handleAddSubtask: Function,
   handleCheckTask: Function,
-  handleEditTask: Function,
   handleTaskExpansion: Function,
 };
 
-const TodoTree = ({
+const Completed = ({
   data,
-  handleAddSubtask,
   handleCheckTask,
-  handleEditTask,
   handleTaskExpansion,
-}: TodoTreeProps) => {
+}: CompletedProps) => {
   const [expandedKeys, setExpandedKeys] = useState<Key[]>([]);
   const [checkedKeys, setCheckedKeys] = useState<Key[]>([]);
   const [autoExpandParent, setAutoExpandParent] = useState<boolean>(true);
@@ -70,46 +58,26 @@ const TodoTree = ({
   }, [data]);
 
   const onExpand = (expandedKeysValue: Key[]) => {
-    handleTaskExpansion(expandedKeysValue, 'todotree');
+    handleTaskExpansion(expandedKeysValue, 'completed');
     setExpandedKeys(expandedKeysValue);
     setAutoExpandParent(false);
   };
 
-  const onCheck = (checkedKeysValue: Key[] | any) => {
-    handleCheckTask(checkedKeysValue, 'todotree');
+  const onCheck = (checkedKeysValue: any, event: any) => {
+    const { node } = event;
+    const { key: uncheckedKey } = node;
+
+    handleCheckTask([uncheckedKey], 'completed');
     setCheckedKeys(checkedKeysValue);
   };
 
   const renderTitle = (node: DataNode): ReactNode => {
-    const { key, title } = node;
-
-    const handleTitleEdit = (value: String) => {
-      handleEditTask(key, value);
-    };
-
-    const handleAddClick = () => {
-      handleAddSubtask(key);
-    };
+    const { title } = node;
 
     return (
-      <Row>
-        <Col>
-          <Paragraph
-            className="todotree-editable-text"
-            editable={{
-              autoSize: { maxRows: 3, minRows: 1 },
-              onChange: handleTitleEdit,
-            }}
-            >
-            {title}
-          </Paragraph>
-        </Col>
-        <Col>
-          <Tooltip title="Add subtask">
-            <PlusOutlined onClick={handleAddClick} />
-          </Tooltip>
-        </Col>
-      </Row>
+      <div className="completed-task-text">
+        <Text>{title}</Text>
+      </div>
     );
   };
 
@@ -129,9 +97,9 @@ const TodoTree = ({
             treeData={data}
           />
         )
-        : <Empty />}
+      : <Empty />}
     </div>
   );
 };
 
-export default TodoTree;
+export default Completed;
