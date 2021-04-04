@@ -15,8 +15,6 @@ import './Todo.css';
 import TodoTree from './TodoTree/TodoTree';
 import Completed from './Completed/Completed';
 
-// import { SAMPLE_TO_DO } from '../../constants';
-
 const { Title } = Typography;
 
 const Todo = () => {
@@ -28,14 +26,33 @@ const Todo = () => {
   useEffect(() => {
     const todoFromLocalStorage = localStorage.getItem('todo');
     const completedFromLocalStorage = localStorage.getItem('completed');
+    let parsedTodo: DataNode[] = [];
+    let parsedCompleted: DataNode[] = [];
+    let primaryKeys: number[] = [];
 
     if (todoFromLocalStorage && todoFromLocalStorage.length > 0) {
-      setTodo(JSON.parse(todoFromLocalStorage));
+      parsedTodo = JSON.parse(todoFromLocalStorage);
+      setTodo(parsedTodo);
     }
 
     if (completedFromLocalStorage && completedFromLocalStorage.length > 0) {
-      setCompleted(JSON.parse(completedFromLocalStorage));
+      parsedCompleted = JSON.parse(completedFromLocalStorage);
+      setCompleted(parsedCompleted);
     }
+
+    if (parsedTodo.length > 0) {
+      primaryKeys = [...primaryKeys, ...parsedTodo.map((e) => e.key as number)];
+    }
+
+    if (parsedCompleted.length > 0) {
+      primaryKeys = [...primaryKeys, ...parsedCompleted.map((e) => e.key as number)];
+    }
+
+    const highestIndex = primaryKeys.length > 0
+      ? primaryKeys.reduce((a, b) => Math.max(a, b)) + 1
+      : 1;
+    
+    setTaskCount(highestIndex);
   }, []);
 
   // for data persistence - write on local storage every change on list was made
@@ -138,18 +155,15 @@ const Todo = () => {
     const isTodo = origin === 'todotree';
     const data = isTodo ? todo : completed;
 
-    const traverseTreeToUpdateCheckbox = (nodeList: DataNode[] | any): DataNode[] => {
+    const traverseTreeToUpdateCheckbox = (nodeList: DataNode[] | any, forceChildrenUpdate: boolean): DataNode[] => {
       nodeList.forEach((task: DataNode | any, index: number) => {
-        if (!isTodo) {
-          nodeList[index].checked = false;
-        }
-        
-        if (checkedKeys.includes(task.key)) {
-          nodeList[index].checked = true;
+        if (checkedKeys.includes(task.key) || (forceChildrenUpdate && !isTodo)) {
+          console.log(nodeList[index].key, isTodo);
+          nodeList[index].checked = isTodo;
         }
 
         if (task.children) {
-          nodeList[index].children = traverseTreeToUpdateCheckbox(task.children);
+          nodeList[index].children = traverseTreeToUpdateCheckbox(task.children, true);
         }
       });
 
@@ -157,7 +171,7 @@ const Todo = () => {
     };
 
     // synchronize task checked status with their .checked attribute
-    const updatedData = traverseTreeToUpdateCheckbox(data);
+    const updatedData = traverseTreeToUpdateCheckbox(data, false);
     const [parentTaskKey] = checkedKeys.filter((e) => e.length === 1);
     let newTodo;
     let newCompleted;
@@ -175,6 +189,7 @@ const Todo = () => {
         uncompletedTask[0].checked = false;
       }
       newTodo = [...todo, ...uncompletedTask];
+      console.log('uncompletedTask', newCompleted, newTodo, uncompletedTask);
     }
 
     setTodo(newTodo);
