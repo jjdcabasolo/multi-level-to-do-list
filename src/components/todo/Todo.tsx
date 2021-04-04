@@ -158,7 +158,6 @@ const Todo = () => {
     const traverseTreeToUpdateCheckbox = (nodeList: DataNode[] | any, forceChildrenUpdate: boolean): DataNode[] => {
       nodeList.forEach((task: DataNode | any, index: number) => {
         if (checkedKeys.includes(task.key) || (forceChildrenUpdate && !isTodo)) {
-          console.log(nodeList[index].key, isTodo);
           nodeList[index].checked = isTodo;
         }
 
@@ -189,7 +188,6 @@ const Todo = () => {
         uncompletedTask[0].checked = false;
       }
       newTodo = [...todo, ...uncompletedTask];
-      console.log('uncompletedTask', newCompleted, newTodo, uncompletedTask);
     }
 
     setTodo(newTodo);
