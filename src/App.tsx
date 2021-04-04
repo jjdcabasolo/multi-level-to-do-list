@@ -6,7 +6,7 @@ import './App.css';
 
 import Todo from './components/todo/Todo';
 
-const { Header, Footer, Content } = Layout;
+const { Header, Content } = Layout;
 const { Title } = Typography;
 
 const App = () => (

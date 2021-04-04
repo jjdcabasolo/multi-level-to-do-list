@@ -1,3 +1,45 @@
+/* overrides for selectable tree feat */
+.ant-tree .ant-tree-node-content-wrapper.ant-tree-node-selected,
+.ant-tree .ant-tree-node-content-wrapper:hover {
+  background-color: transparent;
+}
+
 .todotree {
   background: unset;
+}
+
+.todotree-editable-text  {
+  font-size: 1.25em;
+  margin-right: 8px;
+}
+
+.todotree-editable-text .ant-typography-edit {
+  margin-left: 8px;
+  color: black;
+}
+
+.todotree-editable-text.ant-typography-edit-content {
+  width: 400px;
+}
+
+.todotree-container {
+  min-height: 30vh;
+}
+
+.todotree-container-center-content {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+}
+
+.todotree-date-picker {
+  padding: 0 8px;
+}
+
+.todotree-overdue {
+  background-color: #d3455b;
+  border-radius: 4px;
+  color: white;
+  margin-right: 8px;
+  padding: 0 8px;
 }

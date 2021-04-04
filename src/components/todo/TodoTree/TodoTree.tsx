@@ -1,72 +1,183 @@
-import React, { useState, Key, ReactNode } from 'react';
+import React, {
+  Key,
+  ReactNode,
+  useEffect,
+  useState,
+} from 'react';
 
-import { Tree, Typography } from 'antd';
+import moment from 'moment';
+
+import {
+  Col,
+  DatePicker,
+  Empty,
+  Row,
+  Tooltip,
+  Tree,
+  Typography,
+} from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import { DataNode } from 'antd/lib/tree';
 
 import './TodoTree.css';
 
-const { Paragraph } = Typography;
+const { Paragraph, Text } = Typography;
 
 type TodoTreeProps = {
   data: DataNode[] | undefined,
+  handleAddDueDate: Function,
+  handleAddSubtask: Function,
+  handleCheckTask: Function,
+  handleEditTask: Function,
+  handleTaskExpansion: Function,
 };
 
-const TodoTree = ({ data }: TodoTreeProps) => {
-  const [expandedKeys, setExpandedKeys] = useState<Key[]>(['0-0-0', '0-0-1']);
-  const [checkedKeys, setCheckedKeys] = useState<Key[]>(['0-0-0']);
-  const [selectedKeys, setSelectedKeys] = useState<Key[]>([]);
+const TodoTree = ({
+  data,
+  handleAddDueDate,
+  handleAddSubtask,
+  handleCheckTask,
+  handleEditTask,
+  handleTaskExpansion,
+}: TodoTreeProps) => {
+  const [expandedKeys, setExpandedKeys] = useState<Key[]>([]);
+  const [checkedKeys, setCheckedKeys] = useState<Key[]>([]);
   const [autoExpandParent, setAutoExpandParent] = useState<boolean>(true);
 
+  const hasData = data && data.length > 0;
+
+  // syncs UI states with the current fields on data
+  useEffect(() => {
+    let checkedKeysFromData: string[] = [];
+    let expandedKeysFromData: string[] = [];
+
+    const traverseTree = (nodeList: DataNode[]) => {
+      nodeList.forEach((task: DataNode | any) => {
+        if (task.checked) {
+          checkedKeysFromData = [...checkedKeysFromData, task.key];
+        }
+
+        if (task.expanded) {
+          expandedKeysFromData = [...expandedKeysFromData, task.key];
+        }
+
+        if (task.children) {
+          traverseTree(task.children);
+        }
+      });
+    };
+
+    if (data) {
+      traverseTree(data);
+      setCheckedKeys(checkedKeysFromData);
+      setExpandedKeys(expandedKeysFromData);
+    }
+  }, [data]);
+
   const onExpand = (expandedKeysValue: Key[]) => {
-    console.log('onExpand', expandedKeysValue);
-    // if not set autoExpandParent to false, if children expanded, parent can not collapse.
-    // or, you can remove all expanded children keys.
+    handleTaskExpansion(expandedKeysValue, 'todotree');
     setExpandedKeys(expandedKeysValue);
     setAutoExpandParent(false);
   };
 
-  // Type '(checked: Key[]) => void'
-  // is not assignable to type
-  // '(checked: Key[] | { checked: Key[]; halfChecked: Key[]; }, info: CheckInfo) => void'.
-
-  const onCheck = (checkedKeysValue: any) => {
-    console.log('onCheck', checkedKeysValue);
+  const onCheck = (checkedKeysValue: Key[] | any) => {
+    handleCheckTask(checkedKeysValue, 'todotree');
     setCheckedKeys(checkedKeysValue);
   };
 
-  const onSelect = (selectedKeysValue: Key[], info: any) => {
-    console.log('onSelect', info);
-    setSelectedKeys(selectedKeysValue);
-  };
-
   const renderTitle = (node: DataNode): ReactNode => {
-    const { title } = node;
+    const { key, title, dueDate } = node as any;
 
-    const handleTitleEdit = () => {
-      console.log('edit this shit');
+    const handleTitleEdit = (value: String) => {
+      handleEditTask(key, value);
+    };
+
+    const handleAddSubtaskClick = () => {
+      handleAddSubtask(key);
+    };
+
+    const handleAddDueDateClick = (date: any) => {
+      handleAddDueDate(key, date ? moment(date).format('YYYY-MM-DD') : '');
+    };
+
+    const renderDueDate = () => {
+      let text: string = '';
+
+      if (moment(dueDate).isBefore(moment())) {
+        text = 'Overdue';
+      }
+
+      if (moment(dueDate).isSame(moment(), 'day')) {
+        text = 'Due today';
+      }
+
+      return (
+        <>
+          {text.length > 0 && (
+            <Col>
+              <div className="todotree-overdue">
+                {text}
+              </div>
+            </Col>
+          )}
+          <Col>
+            <Text>
+              {`Due ${moment(dueDate).format('D MMM')}`}
+            </Text>
+          </Col>
+        </>
+      );
     };
 
     return (
-      <Paragraph editable={{ onChange: handleTitleEdit }}>
-        {title}
-      </Paragraph>
+      <Row>
+        <Col>
+          <Paragraph
+            className="todotree-editable-text"
+            editable={{
+              autoSize: { maxRows: 3, minRows: 1 },
+              onChange: handleTitleEdit,
+            }}
+            >
+            {title}
+          </Paragraph>
+        </Col>
+        <Col>
+          <Tooltip title="Add subtask">
+            <PlusOutlined onClick={handleAddSubtaskClick} />
+          </Tooltip>
+        </Col>
+        <Col>
+          <DatePicker
+            bordered={false}
+            className="todotree-date-picker"
+            defaultValue={dueDate && dueDate.length > 0 ? moment(dueDate) : undefined}
+            onChange={handleAddDueDateClick}
+          />
+        </Col>
+        {dueDate && dueDate.length > 0 && renderDueDate()}
+      </Row>
     );
   };
 
   return (
-    <Tree
-      autoExpandParent={autoExpandParent}
-      checkable
-      checkedKeys={checkedKeys}
-      expandedKeys={expandedKeys}
-      onCheck={onCheck}
-      onExpand={onExpand}
-      onSelect={onSelect}
-      selectedKeys={selectedKeys}
-      treeData={data}
-      titleRender={renderTitle}
-      className="todotree"
-    />
+    <div className={`todotree-container ${hasData ? '' : 'todotree-container-center-content'}`}>
+      {hasData
+        ? (
+          <Tree
+            autoExpandParent={autoExpandParent}
+            checkable
+            checkedKeys={checkedKeys}
+            className="todotree"
+            expandedKeys={expandedKeys}
+            onCheck={onCheck}
+            onExpand={onExpand}
+            titleRender={renderTitle}
+            treeData={data}
+          />
+        )
+        : <Empty />}
+    </div>
   );
 };
 
