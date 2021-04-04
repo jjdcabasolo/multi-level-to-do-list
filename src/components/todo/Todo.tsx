@@ -15,18 +15,34 @@ import './Todo.css';
 import TodoTree from './TodoTree/TodoTree';
 import Completed from './Completed/Completed';
 
-import { SAMPLE_TO_DO } from '../../constants';
+// import { SAMPLE_TO_DO } from '../../constants';
 
 const { Title } = Typography;
 
 const Todo = () => {
-  const [todo, setTodo] = useState<DataNode[]>(SAMPLE_TO_DO);
+  const [todo, setTodo] = useState<DataNode[]>([]);
   const [completed, setCompleted] = useState<DataNode[]>([]);
   const [taskCount, setTaskCount] = useState<number>(1);
 
+  // read data from local storage if there's a saved todo/completed JSON string
   useEffect(() => {
+    const todoFromLocalStorage = localStorage.getItem('todo');
+    const completedFromLocalStorage = localStorage.getItem('completed');
 
+    if (todoFromLocalStorage && todoFromLocalStorage.length > 0) {
+      setTodo(JSON.parse(todoFromLocalStorage));
+    }
+
+    if (completedFromLocalStorage && completedFromLocalStorage.length > 0) {
+      setCompleted(JSON.parse(completedFromLocalStorage));
+    }
   }, []);
+
+  // for data persistence - write on local storage every change on list was made
+  const writeToLocalStorage = (todoToWrite: DataNode[] = todo, completedToWrite: DataNode[] = completed) => {
+    localStorage.setItem('todo', JSON.stringify(todoToWrite));
+    localStorage.setItem('completed', JSON.stringify(completedToWrite));
+  };
 
   // recursion to locate and edit the specific task using the key path (format: 1-0-0)
   // where first number is the unique key, and the subsequent numbers are the 
@@ -69,6 +85,8 @@ const Todo = () => {
     return nodeList;
   };
 
+  // add main task
+  // triggered when the plus icon beside the Todo header was clicked
   const handleAddTask = () => {
     const updatedTodo = [...todo, {
       checked: false,
@@ -80,26 +98,42 @@ const Todo = () => {
 
     setTaskCount(taskCount + 1);
     setTodo(updatedTodo);
+
+    writeToLocalStorage(updatedTodo);
   };
 
+  // add subtask from a task
+  // triggered when the plus icon on the right side of task text was clicked
   const handleAddSubtask = (key: String) => {
     const updatedTodo = findTaskByKeyPath(key.split('-'), [...todo], key, 'addSubtask', '', true);
 
     setTodo(updatedTodo);
+
+    writeToLocalStorage(updatedTodo);
   };
   
+  // sync data's .title on <Paragraph />  value change
+  // triggered when a value has been set on <Paragraph /> on todo tree
   const handleEditTask = (key: String, value: String) => {
     const updatedTodo = findTaskByKeyPath(key.split('-'), [...todo], key, 'edit', value, true);
 
     setTodo(updatedTodo);
+
+    writeToLocalStorage(updatedTodo);
   };
 
+  // sync data's .dueDate on <DatePicker /> value change
+  // triggered when a date has been set on date picker on todo tree
   const handleAddDueDate = (key: String, dueDate: String) => {
     const updatedTodo = findTaskByKeyPath(key.split('-'), [...todo], key, 'addDueDate', dueDate, true);
 
     setTodo(updatedTodo);
+
+    writeToLocalStorage(updatedTodo);
   };
 
+  // sync task checked status with their .checked attribute
+  // triggered when checkbox was clicked on todo tree
   const handleCheckTask = (checkedKeys: string[], origin: string) => {
     const isTodo = origin === 'todotree';
     const data = isTodo ? todo : completed;
@@ -145,8 +179,12 @@ const Todo = () => {
 
     setTodo(newTodo);
     setCompleted(newCompleted as DataNode[]);
+
+    writeToLocalStorage(newTodo, newCompleted);
   };
 
+  // sync task expansion status with their .expanded attribute
+  // triggered when expansion icon was clicked on todo tree
   const handleTaskExpansion = (expandedKeys: string[], origin: string) => {
     const isTodo = origin === 'todotree';
     const data = isTodo ? todo : completed;
@@ -170,8 +208,10 @@ const Todo = () => {
 
     if (isTodo) {
       setTodo(updatedData);
+      writeToLocalStorage(updatedData);
     } else {
       setCompleted(updatedData);
+      writeToLocalStorage(todo, updatedData);
     }
   };
 
