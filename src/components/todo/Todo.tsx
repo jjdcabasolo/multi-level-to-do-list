@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import {
   Button,
@@ -24,25 +24,43 @@ const Todo = () => {
   const [completed, setCompleted] = useState<DataNode[]>([]);
   const [taskCount, setTaskCount] = useState<number>(1);
 
-  const findTaskByKeyPath = (keyPath: Array<String>, nodeList: DataNode[], key: String, mode: String, value: String, isPrimaryKey: boolean): DataNode[] => {
+  useEffect(() => {
+
+  }, []);
+
+  // recursion to locate and edit the specific task using the key path (format: 1-0-0)
+  // where first number is the unique key, and the subsequent numbers are the 
+  // index in the children array
+  const findTaskByKeyPath = (keyPath: Array<String>, nodeList: DataNode[] | any, key: String, mode: String, value: String, isPrimaryKey: boolean): DataNode[] => {
     const shiftedKey = Number(keyPath.shift());
+    // primary key (first number in key path) does not mean it is the index in the array
+    // so it findIndex() was used to get it. for the subsequent keys in the path, it is
+    // now using the index in the children array.
     const index: number = isPrimaryKey
-      ? nodeList.findIndex((e) => e.key === `${shiftedKey}`)
+      ? nodeList.findIndex((e: DataNode) => e.key === `${shiftedKey}`)
       : shiftedKey;
     const node = nodeList[index];
 
     if (node && node.children && keyPath.length > 0) {
       nodeList[index].children = findTaskByKeyPath(keyPath, node.children as DataNode[], key, mode, value, false);
     } else if (keyPath.length === 0) {
-      if (mode === 'add') {
+      if (mode === 'addSubtask') {
         const newKey = `${key}-${node && node.children ? node.children.length : 0}`;
-        const newNode = { title: value, key: newKey, expanded: true, checked: false };
+        const newNode = {
+          checked: false,
+          dueDate: '',
+          expanded: true,
+          key: newKey,
+          title: value,
+        };
   
         nodeList[index].children = node && node.children
           ? [...node.children, newNode]
           : [newNode];
       } else if (mode === 'edit') {
         nodeList[index].title = value;
+      } else if (mode === 'addDueDate') {
+        nodeList[index].dueDate = value;
       }
 
       return nodeList;
@@ -54,6 +72,7 @@ const Todo = () => {
   const handleAddTask = () => {
     const updatedTodo = [...todo, {
       checked: false,
+      dueDate: '',
       expanded: true,
       key: `${taskCount}`,
       title: '',
@@ -64,13 +83,19 @@ const Todo = () => {
   };
 
   const handleAddSubtask = (key: String) => {
-    const updatedTodo = findTaskByKeyPath(key.split('-'), [...todo], key, 'add', '', true);
+    const updatedTodo = findTaskByKeyPath(key.split('-'), [...todo], key, 'addSubtask', '', true);
 
     setTodo(updatedTodo);
   };
   
   const handleEditTask = (key: String, value: String) => {
     const updatedTodo = findTaskByKeyPath(key.split('-'), [...todo], key, 'edit', value, true);
+
+    setTodo(updatedTodo);
+  };
+
+  const handleAddDueDate = (key: String, dueDate: String) => {
+    const updatedTodo = findTaskByKeyPath(key.split('-'), [...todo], key, 'addDueDate', dueDate, true);
 
     setTodo(updatedTodo);
   };
@@ -102,8 +127,6 @@ const Todo = () => {
     const [parentTaskKey] = checkedKeys.filter((e) => e.length === 1);
     let newTodo;
     let newCompleted;
-
-    // console.log('updatedData', updatedData);
     
     if (isTodo) {
       // transfer from todo to completed when parent task was checked
@@ -119,9 +142,6 @@ const Todo = () => {
       }
       newTodo = [...todo, ...uncompletedTask];
     }
-
-    // console.log('newTodo', newTodo);
-    // console.log('newCompleted', newCompleted);
 
     setTodo(newTodo);
     setCompleted(newCompleted as DataNode[]);
@@ -155,9 +175,6 @@ const Todo = () => {
     }
   };
 
-  // console.log('todo:', todo);
-  // console.log('completed:', completed);
-
   return (
     <>
       <Row>
@@ -179,6 +196,7 @@ const Todo = () => {
         <Col span={24}>
           <TodoTree
             data={todo}
+            handleAddDueDate={handleAddDueDate}
             handleAddSubtask={handleAddSubtask}
             handleCheckTask={handleCheckTask}
             handleEditTask={handleEditTask}

@@ -5,8 +5,11 @@ import React, {
   useState,
 } from 'react';
 
+import moment from 'moment';
+
 import {
   Col,
+  DatePicker,
   Empty,
   Row,
   Tooltip,
@@ -18,10 +21,11 @@ import { DataNode } from 'antd/lib/tree';
 
 import './TodoTree.css';
 
-const { Paragraph } = Typography;
+const { Paragraph, Text } = Typography;
 
 type TodoTreeProps = {
   data: DataNode[] | undefined,
+  handleAddDueDate: Function,
   handleAddSubtask: Function,
   handleCheckTask: Function,
   handleEditTask: Function,
@@ -30,6 +34,7 @@ type TodoTreeProps = {
 
 const TodoTree = ({
   data,
+  handleAddDueDate,
   handleAddSubtask,
   handleCheckTask,
   handleEditTask,
@@ -81,14 +86,47 @@ const TodoTree = ({
   };
 
   const renderTitle = (node: DataNode): ReactNode => {
-    const { key, title } = node;
+    const { key, title, dueDate } = node as any;
 
     const handleTitleEdit = (value: String) => {
       handleEditTask(key, value);
     };
 
-    const handleAddClick = () => {
+    const handleAddSubtaskClick = () => {
       handleAddSubtask(key);
+    };
+
+    const handleAddDueDateClick = (date: any) => {
+      handleAddDueDate(key, date ? moment(date).format('YYYY-MM-DD') : '');
+    };
+
+    const renderDueDate = () => {
+      let text: string = '';
+
+      if (moment(dueDate).isBefore(moment())) {
+        text = 'Overdue';
+      }
+
+      if (moment(dueDate).isSame(moment(), 'day')) {
+        text = 'Due today';
+      }
+
+      return (
+        <>
+          {text.length > 0 && (
+            <Col>
+              <div className="todotree-overdue">
+                {text}
+              </div>
+            </Col>
+          )}
+          <Col>
+            <Text>
+              {`Due ${moment(dueDate).format('D MMM')}`}
+            </Text>
+          </Col>
+        </>
+      );
     };
 
     return (
@@ -106,9 +144,18 @@ const TodoTree = ({
         </Col>
         <Col>
           <Tooltip title="Add subtask">
-            <PlusOutlined onClick={handleAddClick} />
+            <PlusOutlined onClick={handleAddSubtaskClick} />
           </Tooltip>
         </Col>
+        <Col>
+          <DatePicker
+            bordered={false}
+            className="todotree-date-picker"
+            defaultValue={dueDate && dueDate.length > 0 ? moment(dueDate) : undefined}
+            onChange={handleAddDueDateClick}
+          />
+        </Col>
+        {dueDate && dueDate.length > 0 && renderDueDate()}
       </Row>
     );
   };

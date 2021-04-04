@@ -66,8 +66,9 @@ const Completed = ({
   const onCheck = (checkedKeysValue: any, event: any) => {
     const { node } = event;
     const { key: uncheckedKey } = node;
+    const [primaryUncheckedKey] = uncheckedKey.split('-');
 
-    handleCheckTask([uncheckedKey], 'completed');
+    handleCheckTask([primaryUncheckedKey], 'completed');
     setCheckedKeys(checkedKeysValue);
   };
 

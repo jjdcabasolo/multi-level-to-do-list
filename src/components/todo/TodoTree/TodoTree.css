@@ -31,3 +31,15 @@
   display: flex;
   justify-content: center;
 }
+
+.todotree-date-picker {
+  padding: 0 8px;
+}
+
+.todotree-overdue {
+  background-color: #d3455b;
+  border-radius: 4px;
+  color: white;
+  margin-right: 8px;
+  padding: 0 8px;
+}
